@@ -34,13 +34,11 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user?.id) return;
     setLoading(true);
 
-    // @ts-expect-error: 'teams' table type is not in generated types yet.
-    const { data, error } = await (supabase.from("teams") as any)
+    // Only fetch teams where this user is the owner (no subqueries)
+    const { data, error } = await supabase
+      .from("teams")
       .select("*")
-      // Show teams user owns or is a member of
-      .or(
-        `owner_id.eq.${user.id},id.in.(select team_id from team_members where user_id.eq.${user.id} and status.eq.active)`
-      )
+      .eq("owner_id", user.id)
       .order("created_at");
 
     if (error) {
