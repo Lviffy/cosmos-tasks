@@ -9,17 +9,15 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 const AppSidebar: React.FC = () => {
   const { user, profile } = useAuth();
-  const location = useLocation();
 
   // Only Dashboard for now, active highlighting for extensibility
   const navItems = [
@@ -27,14 +25,12 @@ const AppSidebar: React.FC = () => {
       to: "/dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
-      match: (path: string) => path === "/dashboard",
     },
     // add more routes here
   ];
 
   return (
     <Sidebar className="h-full" collapsible="offcanvas">
-      {/* Optionally, you can add a logo or app title in the header */}
       <SidebarHeader className="flex items-center px-2">
         <LayoutDashboard className="text-primary mr-2" size={24} />
         <span className="font-semibold text-lg hidden md:inline">TaskApp</span>
@@ -42,19 +38,26 @@ const AppSidebar: React.FC = () => {
 
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map((item) => {
-            const active = item.match(location.pathname);
-            return (
-              <SidebarMenuItem key={item.to}>
-                <SidebarMenuButton asChild isActive={active}>
-                  <Link to={item.to} className="flex items-center gap-2">
-                    <item.icon className="size-4" />
-                    <span className="hidden md:inline">{item.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+          {navItems.map((item) => (
+            <SidebarMenuItem key={item.to}>
+              <SidebarMenuButton asChild>
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 w-full ${
+                      isActive
+                        ? "bg-muted text-primary font-medium"
+                        : "hover:bg-muted/50"
+                    }`
+                  }
+                  end
+                >
+                  <item.icon className="size-4" />
+                  <span className="hidden md:inline">{item.label}</span>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
         </SidebarMenu>
       </SidebarContent>
 
@@ -78,9 +81,9 @@ const AppSidebar: React.FC = () => {
             </div>
           </div>
         ) : (
-          <Link to="/auth" className="w-full">
+          <NavLink to="/auth" className="w-full">
             <Button variant="outline" className="w-full">Login</Button>
-          </Link>
+          </NavLink>
         )}
       </SidebarFooter>
     </Sidebar>
