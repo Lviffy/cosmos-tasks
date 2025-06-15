@@ -7,10 +7,11 @@ import { Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import AppSidebar, { AppSidebarLayout } from "@/components/AppSidebar";
-import UserAvatarButton from "@/components/UserAvatarButton";
+import UserProfile from "@/components/UserProfile";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useTeams } from "@/contexts/TeamsContext";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Link } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
   const [addOpen, setAddOpen] = useState(false);
@@ -78,7 +79,15 @@ const Dashboard: React.FC = () => {
               <Plus className="size-4" /> New Task
             </Button>
             <ThemeToggle />
-            <UserAvatarButton />
+            {user ? (
+              <UserProfile />
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" size="sm">
+                  Login
+                </Button>
+              </Link>
+            )}
           </div>
         </header>
         {/* Main content */}
