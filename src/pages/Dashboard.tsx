@@ -4,9 +4,27 @@ import { Button } from "@/components/ui/button";
 import TaskBoard from "@/components/TaskBoard";
 import AddTaskDialog from "@/components/AddTaskDialog";
 import { LayoutDashboard, Plus } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard: React.FC = () => {
   const [addOpen, setAddOpen] = useState(false);
+
+  const { user, loading } = useAuth();
+  const { toast } = useToast();
+
+  const handleOpenAddTask = () => {
+    if (!loading && !user) {
+      toast({
+        title: "Please sign in",
+        description: "You must be signed in to create a task.",
+        variant: "destructive",
+      });
+      setAddOpen(false);
+      return;
+    }
+    setAddOpen(true);
+  };
 
   return (
     <div className="min-h-screen w-full bg-background">
@@ -32,7 +50,13 @@ const Dashboard: React.FC = () => {
                 Manage all your project tasks in one place.
               </p>
             </div>
-            <Button variant="default" size="sm" className="flex items-center gap-2" onClick={() => setAddOpen(true)}>
+            <Button
+              variant="default"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={handleOpenAddTask}
+              disabled={loading || !user}
+            >
               <Plus className="size-4" /> New Task
             </Button>
           </div>
