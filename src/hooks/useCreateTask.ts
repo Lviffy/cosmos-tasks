@@ -5,16 +5,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from "@/hooks/use-toast";
 import { Database } from '@/integrations/supabase/types';
 
+type TaskStatus = Database['public']['Enums']['task_status'];
+
 type NewTask = {
   title: string;
   description?: string;
-  due_date?: string;
+  due_date?: string | null;
   tag_label?: string;
   tag_color?: string;
-  status?: string;
-  progress_total?: number;
-  progress_completed?: number;
-  assignees_count?: number;
+  status?: TaskStatus; // use exact type
+  progress_total?: number | null;
+  progress_completed?: number | null;
+  assignees_count?: number | null;
 };
 
 export function useCreateTask() {
@@ -25,12 +27,25 @@ export function useCreateTask() {
   const mutation = useMutation({
     mutationFn: async (task: NewTask) => {
       if (!user) throw new Error("User not authenticated");
-      const { error, data } = await supabase.from('tasks').insert({ ...task, user_id: user.id }).select().single();
+      // make sure to cast the status as TaskStatus
+      const insertPayload = {
+        ...task,
+        user_id: user.id,
+        status: (task.status || 'todo') as TaskStatus,
+        due_date: task.due_date ? task.due_date : null,
+        progress_total: task.progress_total ?? 1,
+        progress_completed: task.progress_completed ?? 0,
+        assignees_count: task.assignees_count ?? 1,
+      };
+      const { error, data } = await supabase
+        .from('tasks')
+        .insert(insertPayload)
+        .select()
+        .single();
       if (error) throw new Error(error.message);
       return data;
     },
     onSuccess: (newTask) => {
-      // Optimistically add the new task to the cache
       queryClient.setQueryData(['tasks', user?.id], (old: any) => [newTask, ...(old ?? [])]);
       toast({
         title: "Task created",
