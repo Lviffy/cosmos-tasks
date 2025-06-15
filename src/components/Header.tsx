@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Logo from './Logo';
+import UserProfile from './UserProfile';
+import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import { Menu, X, CircleDot, LayoutDashboard, DollarSign, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -10,10 +13,10 @@ import { Switch } from '@/components/ui/switch';
 const Header = () => {
   const [activePage, setActivePage] = useState('features');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false); // Default to light mode
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { user, loading } = useAuth();
   
   useEffect(() => {
-    // Apply the theme to the document when it changes
     if (isDarkMode) {
       document.documentElement.classList.remove('light-mode');
       document.documentElement.classList.add('dark-mode');
@@ -48,7 +51,6 @@ const Header = () => {
           <Logo />
         </div>
         
-        {/* Mobile menu button */}
         <button 
           className="md:hidden p-3 rounded-2xl text-muted-foreground hover:text-foreground"
           onClick={toggleMobileMenu}
@@ -56,7 +58,6 @@ const Header = () => {
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
         
-        {/* Desktop navigation */}
         <nav className="hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2">
           <div className="rounded-full px-1 py-1 backdrop-blur-md bg-background/80 border border-border shadow-lg">
             <ToggleGroup type="single" value={activePage} onValueChange={(value) => value && setActivePage(value)}>
@@ -94,7 +95,6 @@ const Header = () => {
           </div>
         </nav>
         
-        {/* Mobile navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden absolute top-20 left-4 right-4 bg-background/95 backdrop-blur-md py-4 px-6 border border-border rounded-2xl shadow-lg z-50">
             <div className="flex flex-col gap-4">
@@ -126,7 +126,6 @@ const Header = () => {
                 <DollarSign size={16} className="inline-block mr-1.5" /> Pricing
               </a>
               
-              {/* Add theme toggle for mobile */}
               <div className="flex items-center justify-between px-3 py-2">
                 <span className="text-sm text-muted-foreground">Theme</span>
                 <div className="flex items-center gap-2">
@@ -144,7 +143,6 @@ const Header = () => {
         )}
         
         <div className="hidden md:flex items-center gap-4">
-          {/* Theme toggle for desktop */}
           <div className="flex items-center gap-2 rounded-full px-3 py-2">
             <Moon size={18} className={`${isDarkMode ? 'text-primary' : 'text-muted-foreground'}`} />
             <Switch 
@@ -155,7 +153,17 @@ const Header = () => {
             <Sun size={18} className={`${!isDarkMode ? 'text-primary' : 'text-muted-foreground'}`} />
           </div>
           <div className="rounded-2xl">
-            <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted">Log in</Button>
+            {loading ? (
+              <Button variant="ghost" disabled>Loading...</Button>
+            ) : user ? (
+              <UserProfile />
+            ) : (
+              <Link to="/auth">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted">
+                  Log in
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>
