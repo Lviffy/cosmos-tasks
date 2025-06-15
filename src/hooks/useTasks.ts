@@ -16,21 +16,24 @@ export const useTasks = () => {
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', user?.id, selectedTeam?.id],
-    queryFn: async (): Promise<DbTask[]> => {
+    queryFn: async () => {
       if (!user || !selectedTeam) return [];
+      
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', user.id)
         .eq('team_id', selectedTeam.id);
+        
       if (error) {
         toast({
-            title: "Error fetching tasks",
-            description: error.message,
-            variant: "destructive",
+          title: "Error fetching tasks",
+          description: error.message,
+          variant: "destructive",
         });
         throw new Error(error.message);
       }
+      
       return data || [];
     },
     enabled: !!user && !!selectedTeam,
@@ -39,6 +42,7 @@ export const useTasks = () => {
   const updateTaskStatusMutation = useMutation({
     mutationFn: async ({ taskId, newStatus }: { taskId: string; newStatus: string }) => {
       if (!user || !selectedTeam) throw new Error("User not authenticated or no team selected");
+      
       const { error } = await supabase
         .from('tasks')
         .update({ status: newStatus as any })
@@ -51,30 +55,30 @@ export const useTasks = () => {
       }
     },
     onMutate: async ({ taskId, newStatus }) => {
-        await queryClient.cancelQueries({ queryKey: ['tasks', user?.id, selectedTeam?.id] });
-        const previousTasks = queryClient.getQueryData(['tasks', user?.id, selectedTeam?.id]);
-        
-        queryClient.setQueryData(['tasks', user?.id, selectedTeam?.id], (old: DbTask[] | undefined) => {
-            if (!old) return [];
-            return old.map(task => 
-                task.id === taskId ? { ...task, status: newStatus as any } : task
-            );
-        });
-        
-        return { previousTasks };
+      await queryClient.cancelQueries({ queryKey: ['tasks', user?.id, selectedTeam?.id] });
+      const previousTasks = queryClient.getQueryData(['tasks', user?.id, selectedTeam?.id]);
+      
+      queryClient.setQueryData(['tasks', user?.id, selectedTeam?.id], (old: DbTask[] | undefined) => {
+        if (!old) return [];
+        return old.map(task => 
+          task.id === taskId ? { ...task, status: newStatus as any } : task
+        );
+      });
+      
+      return { previousTasks };
     },
     onError: (err, variables, context: any) => {
-        if (context?.previousTasks) {
-            queryClient.setQueryData(['tasks', user?.id, selectedTeam?.id], context.previousTasks);
-        }
-        toast({
-            title: "Error moving task",
-            description: "Could not update task status. Please try again.",
-            variant: "destructive",
-        });
+      if (context?.previousTasks) {
+        queryClient.setQueryData(['tasks', user?.id, selectedTeam?.id], context.previousTasks);
+      }
+      toast({
+        title: "Error moving task",
+        description: "Could not update task status. Please try again.",
+        variant: "destructive",
+      });
     },
     onSettled: () => {
-        queryClient.invalidateQueries({ queryKey: ['tasks', user?.id, selectedTeam?.id] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', user?.id, selectedTeam?.id] });
     },
   });
 
