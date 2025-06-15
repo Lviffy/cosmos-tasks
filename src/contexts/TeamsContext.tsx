@@ -71,7 +71,6 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const createTeam = async (name: string) => {
     if (!user?.id) return null;
     setLoading(true);
-    // @ts-expect-error: 'teams' table type is not in generated types yet.
     const { data, error } = await (supabase.from("teams") as any)
       .insert({
         name,
