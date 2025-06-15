@@ -9,16 +9,22 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarSeparator,
+  SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "react-router-dom";
 import TeamsSwitcher from "@/components/TeamsSwitcher";
+import { useTeams } from "@/contexts/TeamsContext";
 
 const AppSidebar: React.FC = () => {
   const { user, profile } = useAuth();
+  const { teams, selectedTeam, setSelectedTeam, loading: teamsLoading } = useTeams();
 
   // Only Dashboard for now, active highlighting for extensibility
   const navItems = [
@@ -30,6 +36,10 @@ const AppSidebar: React.FC = () => {
     // add more routes here
   ];
 
+  const handleTeamSelect = (team: any) => {
+    setSelectedTeam(team);
+  };
+
   return (
     <Sidebar className="h-full" collapsible="offcanvas">
       <SidebarHeader className="flex items-center px-2 gap-2">
@@ -38,11 +48,6 @@ const AppSidebar: React.FC = () => {
           <span className="font-semibold text-lg hidden md:inline">TaskApp</span>
         </div>
       </SidebarHeader>
-
-      {/* Team switcher here */}
-      <div className="px-2 pt-1 pb-2">
-        <TeamsSwitcher />
-      </div>
 
       <SidebarContent>
         <SidebarMenu>
@@ -67,6 +72,35 @@ const AppSidebar: React.FC = () => {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
+
+        <SidebarSeparator className="my-2" />
+        
+        <SidebarGroup className="p-2 pt-0">
+          <SidebarGroupLabel className="px-0 pb-1">Workspaces</SidebarGroupLabel>
+          <SidebarMenu>
+            {teamsLoading && !teams.length ? (
+               <>
+                 <SidebarMenuItem><SidebarMenuSkeleton showIcon /></SidebarMenuItem>
+                 <SidebarMenuItem><SidebarMenuSkeleton showIcon /></SidebarMenuItem>
+               </>
+            ) : (
+              teams.map((team) => (
+                <SidebarMenuItem key={team.id}>
+                  <SidebarMenuButton
+                    onClick={() => handleTeamSelect(team)}
+                    isActive={selectedTeam?.id === team.id}
+                  >
+                    <Users className="size-4" />
+                    <span className="truncate">{team.name}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))
+            )}
+            <SidebarMenuItem>
+              <TeamsSwitcher />
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
 
       {/* Footer with user info or login button */}
