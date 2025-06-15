@@ -33,6 +33,54 @@ export type Database = {
         }
         Relationships: []
       }
+      tasks: {
+        Row: {
+          assignees_count: number | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          progress_completed: number | null
+          progress_total: number | null
+          status: Database["public"]["Enums"]["task_status"]
+          tag_color: string | null
+          tag_label: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignees_count?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          progress_completed?: number | null
+          progress_total?: number | null
+          status?: Database["public"]["Enums"]["task_status"]
+          tag_color?: string | null
+          tag_label?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignees_count?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          progress_completed?: number | null
+          progress_total?: number | null
+          status?: Database["public"]["Enums"]["task_status"]
+          tag_color?: string | null
+          tag_label?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -41,7 +89,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      task_status: "todo" | "in-progress" | "in-review" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -156,6 +204,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      task_status: ["todo", "in-progress", "in-review", "completed"],
+    },
   },
 } as const

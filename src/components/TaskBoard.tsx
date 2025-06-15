@@ -1,186 +1,138 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import TaskColumn, { Column } from './TaskColumn';
 import { Task } from './TaskCard';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Database } from '@/integrations/supabase/types';
 
-// Initial data for the task board
-const initialColumns: Column[] = [
-  {
-    id: 'todo',
-    title: 'To Do',
-    color: 'muted',
-    tasks: [
-      {
-        id: 't1',
-        title: 'Update landing page hero section',
-        description: 'Review new design mockups and update copy',
-        tag: { color: 'purple', label: 'Design' },
-        dueDate: 'May 20',
-        assignees: 2,
-        progress: { completed: 3, total: 5 }
-      },
-      {
-        id: 't2',
-        title: 'Social media campaign planning',
-        description: 'Outline Q2 campaign goals and content calendar',
-        tag: { color: 'accent', label: 'Marketing' },
-        dueDate: 'May 22',
-        assignees: 1,
-        progress: { completed: 0, total: 4 }
-      },
-      {
-        id: 't3',
-        title: 'Set up automated testing',
-        description: 'Configure CI/CD pipeline for test automation',
-        tag: { color: 'blue', label: 'Development' },
-        dueDate: 'May 24',
-        assignees: 2,
-        progress: { completed: 0, total: 6 }
-      },
-      {
-        id: 't4',
-        title: 'Create brand style guide',
-        description: 'Document colors, typography, and UI components',
-        tag: { color: 'purple', label: 'Design' },
-        dueDate: 'May 25',
-        assignees: 1,
-        progress: { completed: 0, total: 3 }
-      }
-    ]
-  },
-  {
-    id: 'in-progress',
-    title: 'In Progress',
-    color: 'blue',
-    tasks: [
-      {
-        id: 't5',
-        title: 'API integration with payment gateway',
-        description: 'Connect payment processor and test transactions',
-        tag: { color: 'blue', label: 'Development' },
-        dueDate: 'May 18',
-        assignees: 1,
-        progress: { completed: 2, total: 3 }
-      },
-      {
-        id: 't6',
-        title: 'SEO optimization',
-        description: 'Improve meta descriptions and keywords across site',
-        tag: { color: 'accent', label: 'Marketing' },
-        dueDate: 'May 19',
-        assignees: 2,
-        progress: { completed: 5, total: 8 }
-      },
-      {
-        id: 't7',
-        title: 'Mobile responsive design',
-        description: 'Optimize UI for tablets and mobile devices',
-        tag: { color: 'purple', label: 'Design' },
-        dueDate: 'May 17',
-        assignees: 1,
-        progress: { completed: 3, total: 4 }
-      }
-    ]
-  },
-  {
-    id: 'in-review',
-    title: 'In Review',
-    color: 'amber',
-    tasks: [
-      {
-        id: 't8',
-        title: 'Email newsletter content',
-        description: 'Review draft and provide feedback',
-        tag: { color: 'accent', label: 'Marketing' },
-        dueDate: 'May 15',
-        assignees: 1,
-        progress: { completed: 4, total: 5 }
-      },
-      {
-        id: 't9',
-        title: 'User authentication system',
-        description: 'Code review for login and registration flows',
-        tag: { color: 'blue', label: 'Development' },
-        dueDate: 'May 16',
-        assignees: 2,
-        progress: { completed: 6, total: 6 }
-      },
-      {
-        id: 't10',
-        title: 'Icon set redesign',
-        description: 'Review updated icon set for consistent branding',
-        tag: { color: 'purple', label: 'Design' },
-        dueDate: 'May 14',
-        assignees: 1,
-        progress: { completed: 12, total: 12 }
-      }
-    ]
-  },
-  {
-    id: 'completed',
-    title: 'Completed',
-    color: 'accent',
-    tasks: [
-      {
-        id: 't11',
-        title: 'Create user flow diagrams',
-        description: 'Document onboarding process for new users',
-        tag: { color: 'purple', label: 'Design' },
-        dueDate: 'May 10',
-        assignees: 1,
-        progress: { completed: 5, total: 5 }
-      },
-      {
-        id: 't12',
-        title: 'Setup analytics tracking',
-        description: 'Implement event tracking across main user flows',
-        tag: { color: 'blue', label: 'Development' },
-        dueDate: 'May 9',
-        assignees: 1,
-        progress: { completed: 4, total: 4 }
-      },
-      {
-        id: 't13',
-        title: 'Competitive analysis report',
-        description: 'Research competitors and document findings',
-        tag: { color: 'accent', label: 'Marketing' },
-        dueDate: 'May 8',
-        assignees: 2,
-        progress: { completed: 7, total: 7 }
-      }
-    ]
-  }
-];
+type DbTask = Database['public']['Tables']['tasks']['Row'];
+
+// Initial data for the task board has been removed.
 
 interface TaskBoardProps {
   className?: string;
 }
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ className }) => {
-  const [columns, setColumns] = useState<Column[]>(initialColumns);
-  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
-  const [dragSourceColumn, setDragSourceColumn] = useState<string | null>(null);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+
+  const { data: tasks, isLoading } = useQuery({
+    queryKey: ['tasks', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id);
+      if (error) {
+        toast({
+            title: "Error fetching tasks",
+            description: error.message,
+            variant: "destructive",
+        });
+        throw new Error(error.message);
+      }
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const updateTaskStatusMutation = useMutation({
+    mutationFn: async ({ taskId, newStatus }: { taskId: string; newStatus: string }) => {
+      if (!user) throw new Error("User not authenticated");
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: newStatus as any })
+        .eq('id', taskId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    },
+    onMutate: async ({ taskId, newStatus }) => {
+        await queryClient.cancelQueries({ queryKey: ['tasks', user?.id] });
+        const previousTasks = queryClient.getQueryData(['tasks', user?.id]);
+        
+        queryClient.setQueryData(['tasks', user?.id], (old: DbTask[] | undefined) => {
+            if (!old) return [];
+            return old.map(task => 
+                task.id === taskId ? { ...task, status: newStatus as any } : task
+            );
+        });
+        
+        return { previousTasks };
+    },
+    onError: (err, variables, context: any) => {
+        if (context?.previousTasks) {
+            queryClient.setQueryData(['tasks', user?.id], context.previousTasks);
+        }
+        toast({
+            title: "Error moving task",
+            description: "Could not update task status. Please try again.",
+            variant: "destructive",
+        });
+    },
+    onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
+    },
+  });
+
+  const columns = useMemo<Column[]>(() => {
+    const columnDefinitions: Omit<Column, 'tasks'>[] = [
+      { id: 'todo', title: 'To Do', color: 'muted' },
+      { id: 'in-progress', title: 'In Progress', color: 'blue' },
+      { id: 'in-review', title: 'In Review', color: 'amber' },
+      { id: 'completed', title: 'Completed', color: 'accent' },
+    ];
+
+    if (!tasks) {
+      return columnDefinitions.map(c => ({...c, tasks: []}));
+    }
+
+    const groupedTasks = tasks.reduce((acc, task) => {
+      const status = task.status;
+      if (!acc[status]) {
+        acc[status] = [];
+      }
+      acc[status].push({
+        id: task.id,
+        title: task.title,
+        description: task.description || '',
+        tag: {
+          color: task.tag_color || 'gray',
+          label: task.tag_label || 'Task',
+        },
+        dueDate: task.due_date ? new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No due date',
+        assignees: task.assignees_count || 1,
+        progress: {
+          completed: task.progress_completed || 0,
+          total: task.progress_total || 1,
+        },
+      });
+      return acc;
+    }, {} as Record<string, Task[]>);
+
+    return columnDefinitions.map(colDef => ({
+      ...colDef,
+      tasks: groupedTasks[colDef.id] || [],
+    }));
+  }, [tasks]);
 
   const handleTaskDragStart = (e: React.DragEvent, task: Task) => {
     e.dataTransfer.setData('taskId', task.id);
     setDraggedTask(task);
-    
-    // Find source column
-    const sourceColumn = columns.find(col => 
-      col.tasks.some(t => t.id === task.id)
-    );
-    
-    if (sourceColumn) {
-      setDragSourceColumn(sourceColumn.id);
-      e.dataTransfer.setData('sourceColumnId', sourceColumn.id);
-    }
   };
 
   const handleTaskDragEnd = () => {
     setDraggedTask(null);
-    setDragSourceColumn(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -195,41 +147,17 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ className }) => {
     e.preventDefault();
     
     const taskId = e.dataTransfer.getData('taskId');
-    const sourceColumnId = e.dataTransfer.getData('sourceColumnId');
-    
-    if (!taskId || !sourceColumnId || sourceColumnId === targetColumnId) {
+    if (!taskId || !draggedTask) return;
+
+    const sourceColumn = columns.find(c => c.tasks.some(t => t.id === taskId));
+    if (!sourceColumn || sourceColumn.id === targetColumnId) {
       return;
     }
     
-    // Update columns state
-    const newColumns = columns.map(column => {
-      // Remove task from source column
-      if (column.id === sourceColumnId) {
-        return {
-          ...column,
-          tasks: column.tasks.filter(task => task.id !== taskId)
-        };
-      }
-      
-      // Add task to target column
-      if (column.id === targetColumnId) {
-        const taskToMove = columns.find(col => col.id === sourceColumnId)?.tasks.find(task => task.id === taskId);
-        if (taskToMove) {
-          return {
-            ...column,
-            tasks: [...column.tasks, taskToMove]
-          };
-        }
-      }
-      
-      return column;
-    });
+    updateTaskStatusMutation.mutate({ taskId, newStatus: targetColumnId });
     
-    setColumns(newColumns);
-    
-    // Show a toast notification
     const targetColumn = columns.find(col => col.id === targetColumnId);
-    if (targetColumn && draggedTask) {
+    if (targetColumn) {
       toast({
         title: "Task moved",
         description: `${draggedTask.title} moved to ${targetColumn.title}`,
@@ -240,6 +168,22 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ className }) => {
   const handleStatusChange = (taskId: string, newStatus: string) => {
     // This function can be used for programmatic status changes (not used in this implementation)
   };
+
+  if (isLoading) {
+    return (
+        <div className={`flex gap-4 overflow-x-auto pb-4 ${className}`}>
+            {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex flex-col w-72 min-w-72 rounded-lg border border-border bg-card/50 p-3 space-y-4">
+                    <Skeleton className="h-6 w-2/3" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-44 w-full" />
+                        <Skeleton className="h-44 w-full" />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+  }
 
   return (
     <div className={`flex gap-4 overflow-x-auto pb-4 ${className}`}>
