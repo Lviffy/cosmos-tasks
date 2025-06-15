@@ -17,7 +17,7 @@ export const useTasks = () => {
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', user?.id, selectedTeam?.id],
     queryFn: async () => {
-      if (!user || !selectedTeam) return [];
+      if (!user || !selectedTeam) return [] as DbTask[];
       
       const { data, error } = await supabase
         .from('tasks')
@@ -34,7 +34,7 @@ export const useTasks = () => {
         throw new Error(error.message);
       }
       
-      return data || [];
+      return (data || []) as DbTask[];
     },
     enabled: !!user && !!selectedTeam,
   });
@@ -45,7 +45,7 @@ export const useTasks = () => {
       
       const { error } = await supabase
         .from('tasks')
-        .update({ status: newStatus as any })
+        .update({ status: newStatus as Database['public']['Enums']['task_status'] })
         .eq('id', taskId)
         .eq('user_id', user.id)
         .eq('team_id', selectedTeam.id);
@@ -56,12 +56,12 @@ export const useTasks = () => {
     },
     onMutate: async ({ taskId, newStatus }) => {
       await queryClient.cancelQueries({ queryKey: ['tasks', user?.id, selectedTeam?.id] });
-      const previousTasks = queryClient.getQueryData(['tasks', user?.id, selectedTeam?.id]);
+      const previousTasks = queryClient.getQueryData(['tasks', user?.id, selectedTeam?.id]) as DbTask[] | undefined;
       
       queryClient.setQueryData(['tasks', user?.id, selectedTeam?.id], (old: DbTask[] | undefined) => {
         if (!old) return [];
         return old.map(task => 
-          task.id === taskId ? { ...task, status: newStatus as any } : task
+          task.id === taskId ? { ...task, status: newStatus as Database['public']['Enums']['task_status'] } : task
         );
       });
       
