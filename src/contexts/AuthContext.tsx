@@ -1,16 +1,9 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Profile {
-  id: string;
-  username: string;
-  full_name?: string;
-  avatar_url?: string;
-  created_at: string;
-  updated_at: string;
-}
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 interface AuthContextType {
   user: User | null;
@@ -44,8 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
-        .from('profiles')
+      // Using `as any` to bypass a temporary type generation issue.
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('*')
         .eq('id', user.id)
         .single();

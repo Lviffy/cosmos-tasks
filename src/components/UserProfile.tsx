@@ -38,14 +38,16 @@ const UserProfile = () => {
     return null;
   }
 
+  const fallbackInitial = (profile.username || profile.full_name || user.email || 'A').charAt(0).toUpperCase();
+
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={profile.avatar_url || ''} alt={profile.username} />
+            <AvatarImage src={profile.avatar_url || ''} alt={profile.username || ''} />
             <AvatarFallback>
-              {profile.username.charAt(0).toUpperCase()}
+              {fallbackInitial}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -60,14 +62,14 @@ const UserProfile = () => {
         <div className="grid gap-4 py-4">
           <div className="flex items-center space-x-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={profile.avatar_url || ''} alt={profile.username} />
+              <AvatarImage src={profile.avatar_url || ''} alt={profile.username || ''} />
               <AvatarFallback className="text-lg">
-                {profile.username.charAt(0).toUpperCase()}
+                {fallbackInitial}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-lg font-semibold">{profile.full_name || profile.username}</h3>
-              <p className="text-sm text-muted-foreground">@{profile.username}</p>
+              <h3 className="text-lg font-semibold">{profile.full_name || profile.username || 'Anonymous'}</h3>
+              <p className="text-sm text-muted-foreground">@{profile.username || 'user'}</p>
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
           </div>
