@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import TaskBoard from "@/components/TaskBoard";
 import AddTaskDialog from "@/components/AddTaskDialog";
-import { Plus } from "lucide-react";
+import { Plus, Share2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import AppSidebar, { AppSidebarLayout } from "@/components/AppSidebar";
@@ -12,9 +11,11 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useTeams } from "@/contexts/TeamsContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Link } from "react-router-dom";
+import ShareTeamDialog from "@/components/ShareTeamDialog";
 
 const Dashboard: React.FC = () => {
   const [addOpen, setAddOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const { user, loading } = useAuth();
   const { toast } = useToast();
@@ -70,6 +71,14 @@ const Dashboard: React.FC = () => {
           {/* Settings button removed for now, you can add back if needed */}
           <div className="flex items-center gap-2">
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShareOpen(true)}
+              disabled={loading || !user}
+            >
+              <Share2 className="size-4" /> Share
+            </Button>
+            <Button
               variant="default"
               size="sm"
               className="flex items-center gap-2"
@@ -108,6 +117,13 @@ const Dashboard: React.FC = () => {
           </section>
         </main>
       </div>
+      {selectedTeam && (
+        <ShareTeamDialog
+          teamId={selectedTeam.id}
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+        />
+      )}
     </AppSidebarLayout>
   );
 };

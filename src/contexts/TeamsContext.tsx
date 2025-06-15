@@ -19,6 +19,7 @@ type TeamsContextType = {
   refreshTeams: () => Promise<void>;
   createTeam: (name: string) => Promise<Team | null>;
   deleteTeam: (teamId: string) => Promise<boolean>;
+  inviteUserToTeam: (teamId: string, username: string) => Promise<{ success: boolean; message: string }>;
   loading: boolean;
 };
 
@@ -35,11 +36,10 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user?.id) return;
     setLoading(true);
 
-    // Only fetch teams where this user is the owner (no subqueries)
+    // RLS policy now handles filtering teams for members, so we don't need to filter by owner_id
     const { data, error } = await supabase
       .from("teams")
       .select("*")
-      .eq("owner_id", user.id)
       .order("created_at");
 
     if (error) {
@@ -114,6 +114,42 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return true;
   };
 
+  const inviteUserToTeam = async (teamId: string, username: string): Promise<{ success: boolean; message: string; }> => {
+    if (!user) return { success: false, message: 'You must be logged in.' };
+
+    const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .eq('username', username.trim());
+
+    if (profileError || !profiles || profiles.length === 0) {
+      return { success: false, message: 'User with that username was not found.' };
+    }
+
+    if (profiles.length > 1) {
+      return { success: false, message: 'Multiple users found with that username. Please contact support.' };
+    }
+
+    const invitee = profiles[0];
+
+    if (invitee.id === user.id) {
+      return { success: false, message: "You cannot invite yourself to a team." };
+    }
+
+    const { error: insertError } = await supabase
+      .from('team_members')
+      .insert({ team_id: teamId, user_id: invitee.id });
+    
+    if (insertError) {
+      if (insertError.code === '23505') { // unique constraint violation
+        return { success: false, message: `${invitee.username} is already a member of this team.`};
+      }
+      return { success: false, message: `Error inviting user: ${insertError.message}`};
+    }
+
+    return { success: true, message: `Successfully invited ${invitee.username} to the team.`};
+  };
+
   return (
     <TeamsContext.Provider
       value={{
@@ -123,6 +159,7 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         refreshTeams: fetchTeams,
         createTeam,
         deleteTeam,
+        inviteUserToTeam,
         loading,
       }}
     >
