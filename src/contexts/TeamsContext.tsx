@@ -18,6 +18,7 @@ type TeamsContextType = {
   setSelectedTeam: (team: Team | null) => void;
   refreshTeams: () => Promise<void>;
   createTeam: (name: string) => Promise<Team | null>;
+  deleteTeam: (teamId: string) => Promise<boolean>;
   loading: boolean;
 };
 
@@ -93,6 +94,27 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return data as Team;
   };
 
+  const deleteTeam = async (teamId: string) => {
+    setLoading(true);
+    const { error } = await supabase.from("teams").delete().eq("id", teamId);
+    setLoading(false);
+    if (error) {
+      toast({
+        title: "Error deleting team",
+        description: error.message,
+        variant: "destructive",
+      });
+      return false;
+    }
+    toast({
+      title: "Team deleted",
+      description: "Workspace has been deleted.",
+      variant: "default",
+    });
+    await fetchTeams();
+    return true;
+  };
+
   return (
     <TeamsContext.Provider
       value={{
@@ -101,6 +123,7 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setSelectedTeam,
         refreshTeams: fetchTeams,
         createTeam,
+        deleteTeam,
         loading,
       }}
     >
