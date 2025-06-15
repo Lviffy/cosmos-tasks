@@ -64,7 +64,7 @@ const Dashboard: React.FC = () => {
             {/* Sidebar trigger for mobile/small view */}
             <SidebarTrigger className="md:hidden mr-2" />
             <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
-              {selectedTeam.name} — Dashboard
+              {selectedTeam.name}
             </h1>
           </div>
           {/* Settings button removed for now, you can add back if needed */}
