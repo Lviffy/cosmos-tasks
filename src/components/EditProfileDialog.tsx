@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Check, X, Loader2 } from 'lucide-react';
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -24,6 +25,8 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({ open, onOpenChang
   const { profile, fetchProfile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   
   const [formData, setFormData] = useState({
     username: profile?.username || '',
@@ -31,9 +34,59 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({ open, onOpenChang
     avatar_url: profile?.avatar_url || '',
   });
 
+  // Check username availability
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username.trim() || username === profile?.username) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    setCheckingUsername(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username.trim())
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // No rows returned means username is available
+        setUsernameAvailable(true);
+      } else if (data) {
+        // Username exists
+        setUsernameAvailable(false);
+      }
+    } catch (error) {
+      console.error('Error checking username:', error);
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+
+  // Debounced username check
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.username !== profile?.username) {
+        checkUsernameAvailability(formData.username);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.username, profile?.username]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
+
+    // Check if username is available before submitting
+    if (formData.username !== profile.username && usernameAvailable === false) {
+      toast({
+        title: "Username unavailable",
+        description: "This username is already taken. Please choose another one.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -66,6 +119,22 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({ open, onOpenChang
     }
   };
 
+  const getUsernameStatus = () => {
+    if (formData.username === profile?.username) return null;
+    if (checkingUsername) return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+    if (usernameAvailable === true) return <Check className="h-4 w-4 text-green-500" />;
+    if (usernameAvailable === false) return <X className="h-4 w-4 text-red-500" />;
+    return null;
+  };
+
+  const getUsernameMessage = () => {
+    if (formData.username === profile?.username) return null;
+    if (checkingUsername) return "Checking availability...";
+    if (usernameAvailable === true) return "Username is available";
+    if (usernameAvailable === false) return "Username is already taken";
+    return null;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -81,12 +150,28 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({ open, onOpenChang
               <Label htmlFor="username" className="text-right">
                 Username
               </Label>
-              <Input
-                id="username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="col-span-3"
-              />
+              <div className="col-span-3 space-y-1">
+                <div className="relative">
+                  <Input
+                    id="username"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    className="pr-8"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    {getUsernameStatus()}
+                  </div>
+                </div>
+                {getUsernameMessage() && (
+                  <p className={`text-xs ${
+                    usernameAvailable === true ? 'text-green-600' : 
+                    usernameAvailable === false ? 'text-red-600' : 
+                    'text-muted-foreground'
+                  }`}>
+                    {getUsernameMessage()}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="full_name" className="text-right">
@@ -112,7 +197,10 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({ open, onOpenChang
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={loading}>
+            <Button 
+              type="submit" 
+              disabled={loading || (formData.username !== profile?.username && usernameAvailable === false)}
+            >
               {loading ? 'Saving...' : 'Save changes'}
             </Button>
           </DialogFooter>
