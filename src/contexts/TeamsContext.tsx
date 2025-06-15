@@ -3,6 +3,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+// NOTE: You must manually update your Supabase types after running migrations to avoid TS errors.
+// For now, we disable specific type errors with 'as any' due to missing typings.
 type Team = {
   id: string;
   name: string;
@@ -31,12 +33,16 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const fetchTeams = async () => {
     if (!user?.id) return;
     setLoading(true);
-    // Get teams where user is owner or member
-    const { data, error } = await supabase
-      .from("teams")
+
+    // @ts-expect-error: 'teams' table type is not in generated types yet.
+    const { data, error } = await (supabase.from("teams") as any)
       .select("*")
-      .or(`owner_id.eq.${user.id},id.in.(select team_id from team_members where user_id.eq.${user.id} and status.eq.active)`)
+      // Show teams user owns or is a member of
+      .or(
+        `owner_id.eq.${user.id},id.in.(select team_id from team_members where user_id.eq.${user.id} and status.eq.active)`
+      )
       .order("created_at");
+
     if (error) {
       toast({
         title: "Error loading teams",
@@ -46,9 +52,9 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setTeams([]);
     } else {
       setTeams(data || []);
-      // Keep the current team if still in the list, else pick the first one
-      if (selectedTeam && data?.some((t) => t.id === selectedTeam.id)) {
-        setSelectedTeam(data.find((t) => t.id === selectedTeam.id) ?? null);
+      // Keep selectedTeam if still present, otherwise pick first or null
+      if (selectedTeam && data?.some((t: Team) => t.id === selectedTeam.id)) {
+        setSelectedTeam(data.find((t: Team) => t.id === selectedTeam.id) ?? null);
       } else if (data && data.length > 0) {
         setSelectedTeam(data[0]);
       } else {
@@ -66,14 +72,15 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const createTeam = async (name: string) => {
     if (!user?.id) return null;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("teams")
+    // @ts-expect-error: 'teams' table type is not in generated types yet.
+    const { data, error } = await (supabase.from("teams") as any)
       .insert({
         name,
         owner_id: user.id,
       })
       .select("*")
       .single();
+
     setLoading(false);
     if (error) {
       toast({
@@ -85,7 +92,7 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     toast({ title: "Team created!", description: `Workspace "${name}" is ready.` });
     await fetchTeams();
-    return data;
+    return data as Team;
   };
 
   return (
