@@ -147,7 +147,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_teams: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          team_id: string
+        }[]
+      }
     }
     Enums: {
       task_status: "todo" | "in-progress" | "in-review" | "completed"
