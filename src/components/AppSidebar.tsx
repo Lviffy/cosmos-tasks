@@ -33,7 +33,7 @@ const AppSidebar: React.FC = () => {
   ];
 
   return (
-    <Sidebar className="h-full" collapsible>
+    <Sidebar className="h-full" collapsible="offcanvas">
       {/* Optionally, you can add a logo or app title in the header */}
       <SidebarHeader className="flex items-center px-2">
         <LayoutDashboard className="text-primary mr-2" size={24} />
