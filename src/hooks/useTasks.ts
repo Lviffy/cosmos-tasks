@@ -16,7 +16,7 @@ export const useTasks = () => {
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', user?.id, selectedTeam?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<DbTask[]> => {
       if (!user || !selectedTeam) return [];
       const { data, error } = await supabase
         .from('tasks')
