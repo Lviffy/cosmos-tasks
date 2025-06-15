@@ -10,6 +10,7 @@ import AppSidebar, { AppSidebarLayout } from "@/components/AppSidebar";
 import UserAvatarButton from "@/components/UserAvatarButton";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useTeams } from "@/contexts/TeamsContext";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Dashboard: React.FC = () => {
   const [addOpen, setAddOpen] = useState(false);
@@ -76,6 +77,7 @@ const Dashboard: React.FC = () => {
             >
               <Plus className="size-4" /> New Task
             </Button>
+            <ThemeToggle />
             <UserAvatarButton />
           </div>
         </header>
