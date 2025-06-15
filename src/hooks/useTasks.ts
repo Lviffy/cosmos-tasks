@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Database } from '@/integrations/supabase/types';
 
 type DbTask = Database['public']['Tables']['tasks']['Row'];
+type TaskStatus = Database['public']['Enums']['task_status'];
 
 export const useTasks = () => {
   const { user } = useAuth();
@@ -16,8 +17,8 @@ export const useTasks = () => {
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', user?.id, selectedTeam?.id],
-    queryFn: async () => {
-      if (!user || !selectedTeam) return [] as DbTask[];
+    queryFn: async (): Promise<DbTask[]> => {
+      if (!user || !selectedTeam) return [];
       
       const { data, error } = await supabase
         .from('tasks')
@@ -34,7 +35,7 @@ export const useTasks = () => {
         throw new Error(error.message);
       }
       
-      return (data || []) as DbTask[];
+      return data || [];
     },
     enabled: !!user && !!selectedTeam,
   });
@@ -45,7 +46,7 @@ export const useTasks = () => {
       
       const { error } = await supabase
         .from('tasks')
-        .update({ status: newStatus as Database['public']['Enums']['task_status'] })
+        .update({ status: newStatus as TaskStatus })
         .eq('id', taskId)
         .eq('user_id', user.id)
         .eq('team_id', selectedTeam.id);
@@ -61,7 +62,7 @@ export const useTasks = () => {
       queryClient.setQueryData(['tasks', user?.id, selectedTeam?.id], (old: DbTask[] | undefined) => {
         if (!old) return [];
         return old.map(task => 
-          task.id === taskId ? { ...task, status: newStatus as Database['public']['Enums']['task_status'] } : task
+          task.id === taskId ? { ...task, status: newStatus as TaskStatus } : task
         );
       });
       
