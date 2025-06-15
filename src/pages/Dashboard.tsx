@@ -61,8 +61,8 @@ const Dashboard: React.FC = () => {
         {/* Dashboard Header */}
         <header className="flex items-center justify-between px-4 py-4 border-b border-border bg-card shadow-sm sticky top-0 z-20">
           <div className="flex items-center gap-2">
-            {/* Sidebar trigger for mobile/small view */}
-            <SidebarTrigger className="md:hidden mr-2" />
+            {/* Sidebar trigger for all screen sizes */}
+            <SidebarTrigger className="mr-2" />
             <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
               {selectedTeam.name}
             </h1>

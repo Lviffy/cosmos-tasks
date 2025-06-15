@@ -9,7 +9,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,12 +33,9 @@ const AppSidebar: React.FC = () => {
   return (
     <Sidebar className="h-full" collapsible="offcanvas">
       <SidebarHeader className="flex items-center px-2 gap-2">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2">
-            <LayoutDashboard className="text-primary" size={24} />
-            <span className="font-semibold text-lg hidden md:inline">TaskApp</span>
-          </div>
-          <SidebarTrigger className="h-8 w-8" />
+        <div className="flex items-center gap-2">
+          <LayoutDashboard className="text-primary" size={24} />
+          <span className="font-semibold text-lg hidden md:inline">TaskApp</span>
         </div>
       </SidebarHeader>
 
