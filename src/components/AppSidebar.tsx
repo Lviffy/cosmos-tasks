@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "react-router-dom";
+import TeamsSwitcher from "@/components/TeamsSwitcher";
 
 const AppSidebar: React.FC = () => {
   const { user, profile } = useAuth();
@@ -31,10 +32,15 @@ const AppSidebar: React.FC = () => {
 
   return (
     <Sidebar className="h-full" collapsible="offcanvas">
-      <SidebarHeader className="flex items-center px-2">
-        <LayoutDashboard className="text-primary mr-2" size={24} />
+      <SidebarHeader className="flex items-center px-2 gap-2">
+        <LayoutDashboard className="text-primary" size={24} />
         <span className="font-semibold text-lg hidden md:inline">TaskApp</span>
       </SidebarHeader>
+
+      {/* Team switcher here */}
+      <div className="px-2 pt-1 pb-2">
+        <TeamsSwitcher />
+      </div>
 
       <SidebarContent>
         <SidebarMenu>
