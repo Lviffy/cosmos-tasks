@@ -16,10 +16,10 @@ interface TeamMember {
   id: string;
   user_id: string;
   profiles: {
-    username: string;
-    full_name: string;
-    avatar_url: string;
-  };
+    username: string | null;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
 }
 
 const TeamMembersPage: React.FC = () => {
@@ -35,28 +35,48 @@ const TeamMembersPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
+      // First get team members
+      const { data: teamMembersData, error: membersError } = await supabase
         .from("team_members")
-        .select(`
-          id,
-          user_id,
-          profiles!team_members_user_id_fkey(
-            username,
-            full_name,
-            avatar_url
-          )
-        `)
+        .select("id, user_id")
         .eq("team_id", selectedTeam.id);
 
-      if (error) {
+      if (membersError) {
         toast({
           title: "Error loading members",
-          description: error.message,
+          description: membersError.message,
           variant: "destructive",
         });
-      } else {
-        setMembers(data || []);
+        setLoading(false);
+        return;
       }
+
+      if (!teamMembersData || teamMembersData.length === 0) {
+        setMembers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get user IDs
+      const userIds = teamMembersData.map(member => member.user_id);
+
+      // Then get profiles for those users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url")
+        .in("id", userIds);
+
+      if (profilesError) {
+        console.warn("Error loading profiles:", profilesError.message);
+      }
+
+      // Combine the data
+      const membersWithProfiles = teamMembersData.map(member => ({
+        ...member,
+        profiles: profilesData?.find(profile => profile.id === member.user_id) || null
+      }));
+
+      setMembers(membersWithProfiles);
     } catch (err) {
       toast({
         title: "Error",
