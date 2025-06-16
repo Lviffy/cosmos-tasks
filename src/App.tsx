@@ -25,7 +25,6 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Navigate to="/tasks" replace />} />
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/members" element={<Members />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

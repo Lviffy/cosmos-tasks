@@ -14,7 +14,7 @@ import {
   SidebarSeparator,
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
-import { CheckSquare, UserCheck } from "lucide-react";
+import { CheckSquare, UserCheck, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
