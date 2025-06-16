@@ -1,7 +1,9 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import TaskBoard from "@/components/TaskBoard";
 import AddTaskDialog from "@/components/AddTaskDialog";
+import DashboardAnalytics from "@/components/DashboardAnalytics";
 import { Plus, Share2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -62,13 +64,11 @@ const Dashboard: React.FC = () => {
         {/* Dashboard Header */}
         <header className="flex items-center justify-between px-4 py-4 border-b border-border bg-card shadow-sm sticky top-0 z-20">
           <div className="flex items-center gap-2">
-            {/* Sidebar trigger for all screen sizes */}
             <SidebarTrigger className="mr-2" />
             <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
               {selectedTeam.name}
             </h1>
           </div>
-          {/* Settings button removed for now, you can add back if needed */}
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -99,10 +99,18 @@ const Dashboard: React.FC = () => {
             )}
           </div>
         </header>
+        
         {/* Main content */}
         <main className="max-w-7xl mx-auto w-full px-4 py-10 space-y-10">
+          {/* Analytics Section */}
           <section>
-            <div className="flex justify-between items-center mb-2 gap-2 flex-col sm:flex-row">
+            <h2 className="text-xl font-semibold mb-6">Analytics Overview</h2>
+            <DashboardAnalytics />
+          </section>
+
+          {/* Task Board Section */}
+          <section>
+            <div className="flex justify-between items-center mb-6 gap-2 flex-col sm:flex-row">
               <div>
                 <h2 className="text-xl font-semibold">{selectedTeam.name}'s Board</h2>
                 <p className="text-muted-foreground mb-2 sm:mb-0">

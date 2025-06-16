@@ -14,7 +14,7 @@ import {
   SidebarSeparator,
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Users } from "lucide-react";
+import { LayoutDashboard, Users, CheckSquare, UserCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -26,14 +26,22 @@ const AppSidebar: React.FC = () => {
   const { user, profile } = useAuth();
   const { teams, selectedTeam, setSelectedTeam, loading: teamsLoading } = useTeams();
 
-  // Only Dashboard for now, active highlighting for extensibility
   const navItems = [
     {
       to: "/dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
     },
-    // add more routes here
+    {
+      to: "/tasks",
+      label: "Tasks",
+      icon: CheckSquare,
+    },
+    {
+      to: "/members",
+      label: "Team Members",
+      icon: UserCheck,
+    },
   ];
 
   const handleTeamSelect = (team: any) => {
