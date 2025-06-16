@@ -36,30 +36,53 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user?.id) return;
     setLoading(true);
 
-    // RLS policy now handles filtering teams for members, so we don't need to filter by owner_id
-    const { data, error } = await supabase
-      .from("teams")
-      .select("*")
-      .order("created_at");
+    try {
+      // Fetch teams by joining with team_members to get teams the user belongs to
+      const { data, error } = await supabase
+        .from("team_members")
+        .select(`
+          teams!inner(
+            id,
+            name,
+            owner_id,
+            created_at
+          )
+        `)
+        .eq("user_id", user.id);
 
-    if (error) {
+      if (error) {
+        console.error("Error fetching teams:", error);
+        toast({
+          title: "Error loading teams",
+          description: error.message,
+          variant: "destructive",
+        });
+        setTeams([]);
+      } else {
+        // Extract teams from the joined data
+        const userTeams = data?.map((item: any) => item.teams) || [];
+        console.log("Fetched teams:", userTeams);
+        setTeams(userTeams);
+        
+        // Keep selectedTeam if still present, otherwise pick first or null
+        if (selectedTeam && userTeams.some((t: Team) => t.id === selectedTeam.id)) {
+          setSelectedTeam(userTeams.find((t: Team) => t.id === selectedTeam.id) ?? null);
+        } else if (userTeams.length > 0) {
+          setSelectedTeam(userTeams[0]);
+        } else {
+          setSelectedTeam(null);
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching teams:", err);
       toast({
         title: "Error loading teams",
-        description: error.message,
+        description: "An unexpected error occurred while loading teams.",
         variant: "destructive",
       });
       setTeams([]);
-    } else {
-      setTeams(data || []);
-      // Keep selectedTeam if still present, otherwise pick first or null
-      if (selectedTeam && data?.some((t: Team) => t.id === selectedTeam.id)) {
-        setSelectedTeam(data.find((t: Team) => t.id === selectedTeam.id) ?? null);
-      } else if (data && data.length > 0) {
-        setSelectedTeam(data[0]);
-      } else {
-        setSelectedTeam(null);
-      }
     }
+    
     setLoading(false);
   };
 
@@ -71,26 +94,41 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const createTeam = async (name: string) => {
     if (!user?.id) return null;
     setLoading(true);
-    const { data, error } = await (supabase.from("teams") as any)
-      .insert({
-        name,
-        owner_id: user.id,
-      })
-      .select("*")
-      .single();
+    
+    try {
+      const { data, error } = await (supabase.from("teams") as any)
+        .insert({
+          name,
+          owner_id: user.id,
+        })
+        .select("*")
+        .single();
 
-    setLoading(false);
-    if (error) {
+      setLoading(false);
+      if (error) {
+        console.error("Error creating team:", error);
+        toast({
+          title: "Error creating team",
+          description: error.message,
+          variant: "destructive",
+        });
+        return null;
+      }
+      
+      console.log("Team created successfully:", data);
+      toast({ title: "Team created!", description: `Workspace "${name}" is ready.` });
+      await fetchTeams();
+      return data as Team;
+    } catch (err) {
+      console.error("Unexpected error creating team:", err);
+      setLoading(false);
       toast({
         title: "Error creating team",
-        description: error.message,
+        description: "An unexpected error occurred while creating the team.",
         variant: "destructive",
       });
       return null;
     }
-    toast({ title: "Team created!", description: `Workspace "${name}" is ready.` });
-    await fetchTeams();
-    return data as Team;
   };
 
   const deleteTeam = async (teamId: string) => {
