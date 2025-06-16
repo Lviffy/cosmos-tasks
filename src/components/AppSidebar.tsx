@@ -14,7 +14,7 @@ import {
   SidebarSeparator,
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
-import { CheckSquare, UserCheck, History } from "lucide-react";
+import { LayoutDashboard, Users, CheckSquare, UserCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,11 @@ const AppSidebar: React.FC = () => {
   const { teams, selectedTeam, setSelectedTeam, loading: teamsLoading } = useTeams();
 
   const navItems = [
+    {
+      to: "/dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+    },
     {
       to: "/tasks",
       label: "Tasks",
@@ -47,7 +52,7 @@ const AppSidebar: React.FC = () => {
     <Sidebar className="h-full" collapsible="offcanvas">
       <SidebarHeader className="flex items-center px-2 gap-2">
         <div className="flex items-center gap-2">
-          <CheckSquare className="text-primary" size={24} />
+          <LayoutDashboard className="text-primary" size={24} />
           <span className="font-semibold text-lg hidden md:inline">TaskApp</span>
         </div>
       </SidebarHeader>
@@ -93,7 +98,7 @@ const AppSidebar: React.FC = () => {
                     onClick={() => handleTeamSelect(team)}
                     isActive={selectedTeam?.id === team.id}
                   >
-                    <CheckSquare className="size-4" />
+                    <Users className="size-4" />
                     <span className="truncate">{team.name}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
