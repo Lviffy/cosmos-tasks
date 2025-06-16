@@ -40,7 +40,7 @@ const TeamMembersPage: React.FC = () => {
         .select(`
           id,
           user_id,
-          profiles!inner(
+          profiles!team_members_user_id_fkey(
             username,
             full_name,
             avatar_url
@@ -149,15 +149,15 @@ const TeamMembersPage: React.FC = () => {
                 >
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={member.profiles.avatar_url || ""} />
+                      <AvatarImage src={member.profiles?.avatar_url || ""} />
                       <AvatarFallback>
-                        {(member.profiles.username || member.profiles.full_name || "U").charAt(0).toUpperCase()}
+                        {(member.profiles?.username || member.profiles?.full_name || "U").charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-medium">
-                          {member.profiles.full_name || member.profiles.username || "Unknown User"}
+                          {member.profiles?.full_name || member.profiles?.username || "Unknown User"}
                         </p>
                         {member.user_id === selectedTeam.owner_id && (
                           <Badge variant="secondary" className="flex items-center gap-1">
@@ -167,7 +167,7 @@ const TeamMembersPage: React.FC = () => {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        @{member.profiles.username || "no-username"}
+                        @{member.profiles?.username || "no-username"}
                       </p>
                     </div>
                   </div>
