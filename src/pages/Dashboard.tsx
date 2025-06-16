@@ -102,11 +102,7 @@ const Dashboard: React.FC = () => {
         
         {/* Main content */}
         <main className="max-w-7xl mx-auto w-full px-4 py-10 space-y-10">
-          {/* Analytics Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-6">Analytics Overview</h2>
-            <DashboardAnalytics />
-          </section>
+          
 
           {/* Task Board Section */}
           <section>
@@ -123,6 +119,13 @@ const Dashboard: React.FC = () => {
               <TaskBoard />
             </div>
           </section>
+
+          {/* Analytics Section */}
+          <section>
+            <h2 className="text-xl font-semibold mb-6">Analytics Overview</h2>
+            <DashboardAnalytics />
+          </section>
+          
         </main>
       </div>
       {selectedTeam && (
