@@ -14,7 +14,7 @@ import Auth from "./pages/Auth";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <QueryClientProvider client={queryClient}
     <AuthProvider>
       <TeamsProvider>
         <TooltipProvider>
