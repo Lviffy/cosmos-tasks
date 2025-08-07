@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import TaskBoard from "@/components/TaskBoard";
 import AddTaskDialog from "@/components/AddTaskDialog";
 import DashboardAnalytics from "@/components/DashboardAnalytics";
-import { Plus, Share2 } from "lucide-react";
+import { Plus, Share2, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import AppSidebar, { AppSidebarLayout } from "@/components/AppSidebar";
@@ -49,10 +49,28 @@ const Dashboard: React.FC = () => {
   if (!selectedTeam) {
     return (
       <AppSidebarLayout>
-        <div className="flex flex-col items-center justify-center min-h-screen">
-          <span className="text-muted-foreground mb-2">
-            No team workspace selected. Use the sidebar to create or join a team.
-          </span>
+        <div className="flex items-center justify-center min-h-screen w-full px-4">
+          <div className="max-w-md mx-auto">
+            <div className="rounded-xl border border-border bg-card/60 shadow-lg p-8 text-center">
+              <div className="flex justify-center mb-4">
+                <div className="rounded-full bg-muted/50 p-3">
+                  <Users className="h-8 w-8 text-muted-foreground" />
+                </div>
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                No Team Selected
+              </h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Use the sidebar to create or join a team workspace to get started.
+              </p>
+              <div className="flex justify-center">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  Select Team
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </AppSidebarLayout>
     );
