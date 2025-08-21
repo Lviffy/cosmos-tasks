@@ -2,6 +2,8 @@
 
 A modern, space-themed kanban board application for task management and project organization.
 
+🚀 **[Live Preview](https://cosmos-tasks.vercel.app/)**
+
 ## ✨ Features
 
 - **Drag & Drop Interface**: Intuitive kanban board with smooth drag-and-drop functionality
